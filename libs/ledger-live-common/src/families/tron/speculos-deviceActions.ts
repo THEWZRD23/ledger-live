@@ -1,6 +1,7 @@
 import type { DeviceAction } from "../../bot/types";
 import { deviceActionFlow, formatDeviceAmount } from "../../bot/specs";
 import type { Transaction, Vote } from "./types";
+import TRC10Signatures from "@ledgerhq/cryptoassets/data/trc10";
 
 function subAccount(subAccountId, account) {
   const sub = (account.subAccounts || []).find((a) => a.id === subAccountId);
@@ -38,18 +39,39 @@ export const acceptTransaction: DeviceAction<Transaction, any> =
       {
         title: "Amount",
         button: "Rr",
-        expectedValue: ({ account, status }) =>
-          formatDeviceAmount(account.currency, status.amount, {
-            hideCode: true,
-          }),
+        expectedValue: ({ account, status, transaction }) =>
+          formatDeviceAmount(
+            transaction.subAccountId
+              ? subAccount(transaction.subAccountId, account).token
+              : account.currency,
+            status.amount,
+            {
+              hideCode: true,
+            }
+          ),
       },
       {
         title: "Token",
         button: "Rr",
-        expectedValue: ({ account, transaction }) =>
-          transaction.subAccountId
-            ? subAccount(transaction.subAccountId, account).token.ticker
-            : "TRX",
+        expectedValue: ({ account, transaction }) => {
+          const isTokenTransaction = Boolean(transaction.subAccountId);
+          console.log({ isTokenTransaction });
+          if (isTokenTransaction) {
+            const token = subAccount(transaction.subAccountId, account).token;
+            const [, tokenType, tokenId] = token.id.split("/");
+            console.log({ tokenType, tokenId });
+            if (tokenType === "trc10") {
+              const [, , tokenName] = TRC10Signatures.find(
+                ([sigTokenId]) => sigTokenId === tokenId
+              );
+
+              return `${tokenName.split(" ")[0]}[${tokenId}]`;
+            } else {
+              return token.ticker;
+            }
+          }
+          return "TRX";
+        },
       },
       {
         title: "From Address",
