@@ -1,4 +1,4 @@
-import { useIsFocused, useRoute } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
 import React, { useContext, useCallback } from "react";
 import {
   Dimensions,
@@ -19,7 +19,6 @@ const CollapsibleHeaderScrollView = ({
     useContext(WalletTabNavigatorScrollContext);
   const windowHeight = Dimensions.get("window").height;
   const route = useRoute();
-  const isFocused = useIsFocused();
 
   const onMomentumScrollEnd = useCallback(() => {
     syncScrollOffset(route.name);
@@ -31,16 +30,12 @@ const CollapsibleHeaderScrollView = ({
         scrollToOverflowEnabled={true}
         ref={(ref: ScrollView) => onGetRef({ key: route.name, value: ref })}
         scrollEventThrottle={16}
-        onScroll={
-          isFocused
-            ? Animated.event(
-                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                {
-                  useNativeDriver: true,
-                },
-              )
-            : undefined
-        }
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          {
+            useNativeDriver: true,
+          },
+        )}
         onScrollEndDrag={onMomentumScrollEnd}
         onMomentumScrollEnd={onMomentumScrollEnd}
         contentContainerStyle={[
