@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { ScrollView } from "react-native";
 import { Flex } from "@ledgerhq/native-ui";
+import { useDispatch } from "react-redux";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Device } from "@ledgerhq/live-common/hw/actions/types";
 import { DeviceModelId } from "@ledgerhq/types-devices";
@@ -15,6 +16,7 @@ import {
   StackNavigatorProps,
 } from "../../components/RootNavigator/types/helpers";
 import { CustomImageNavigatorParamList } from "../../components/RootNavigator/types/CustomImageNavigator";
+import { setReadOnlyMode } from "../../actions/settings";
 
 const deviceModelIds = [DeviceModelId.nanoFTS];
 
@@ -41,6 +43,7 @@ type NavigationProps = BaseComposite<
 const Step3Transfer = ({ route, navigation }: NavigationProps) => {
   const { rawData, device: deviceFromRoute, previewData } = route.params;
   const [device, setDevice] = useState<Device | null>(deviceFromRoute);
+  const dispatch = useDispatch();
 
   const handleError = useCallback(
     (error: Error) => {
@@ -48,6 +51,14 @@ const Step3Transfer = ({ route, navigation }: NavigationProps) => {
       navigation.navigate(ScreenName.CustomImageErrorScreen, { error, device });
     },
     [navigation, device],
+  );
+
+  const handleDeviceSelected = useCallback(
+    (device: Device) => {
+      dispatch(setReadOnlyMode(false));
+      setDevice(device);
+    },
+    [dispatch],
   );
 
   const completeAction = useCompleteActionCallback();
@@ -83,7 +94,7 @@ const Step3Transfer = ({ route, navigation }: NavigationProps) => {
         ) : (
           <Flex flex={1} alignSelf="stretch">
             <SelectDevice
-              onSelect={setDevice}
+              onSelect={handleDeviceSelected}
               deviceModelIds={deviceModelIds}
               autoSelectOnAdd
             />
